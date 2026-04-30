@@ -1,0 +1,32 @@
+# IntelliJ IDEA / Android Studio
+*.iml
+.idea
+.kotlin
+
+# Gradle
+.gradle
+**/build/
+!src/**/build/
+
+# Android
+local.properties
+captures
+.externalNativeBuild
+.cxx
+
+# iOS / Xcode
+xcuserdata
+*.xcodeproj/*
+!*.xcodeproj/project.pbxproj
+!*.xcodeproj/xcshareddata/
+!*.xcodeproj/project.xcworkspace/
+!*.xcworkspace/contents.xcworkspacedata
+**/xcshareddata/WorkspaceSettings.xcsettings
+*.framework/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# SQLDelight generated
+**/sqldelight/databases/
