@@ -1,0 +1,41 @@
+CREATE TABLE ExhibitArtwork (
+    exhibitId INTEGER NOT NULL REFERENCES Exhibit(id) ON DELETE CASCADE,
+    artworkId INTEGER NOT NULL REFERENCES Artwork(id) ON DELETE CASCADE,
+    addedAt INTEGER NOT NULL,
+    PRIMARY KEY (exhibitId, artworkId)
+);
+
+CREATE INDEX ExhibitArtwork_artworkId ON ExhibitArtwork(artworkId);
+
+add:
+INSERT OR IGNORE INTO ExhibitArtwork(exhibitId, artworkId, addedAt)
+VALUES (?, ?, ?);
+
+remove:
+DELETE FROM ExhibitArtwork
+WHERE exhibitId = ? AND artworkId = ?;
+
+selectArtworksForExhibit:
+SELECT a.*
+FROM Artwork a
+INNER JOIN ExhibitArtwork ea ON ea.artworkId = a.id
+WHERE ea.exhibitId = ?
+ORDER BY ea.addedAt DESC;
+
+countForExhibit:
+SELECT COUNT(*)
+FROM ExhibitArtwork
+WHERE exhibitId = ?;
+
+isInExhibit:
+SELECT EXISTS(
+    SELECT 1 FROM ExhibitArtwork
+    WHERE exhibitId = ? AND artworkId = ?
+);
+
+exhibitsContainingArtwork:
+SELECT e.*
+FROM Exhibit e
+INNER JOIN ExhibitArtwork ea ON ea.exhibitId = e.id
+WHERE ea.artworkId = ?
+ORDER BY ea.addedAt DESC;

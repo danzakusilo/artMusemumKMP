@@ -1,0 +1,74 @@
+import kotlin.Boolean;
+
+CREATE TABLE Artwork (
+    id INTEGER NOT NULL PRIMARY KEY,
+    title TEXT NOT NULL,
+    primaryImage TEXT,
+    artistDisplayName TEXT,
+    objectDate TEXT,
+    culture TEXT,
+    period TEXT,
+    dynasty TEXT,
+    medium TEXT,
+    dimensions TEXT,
+    department TEXT NOT NULL,
+    classification TEXT,
+    repository TEXT,
+    isFavorite INTEGER AS Boolean NOT NULL DEFAULT 0,
+    favoritedAt INTEGER,
+    cachedAt INTEGER NOT NULL
+);
+
+CREATE INDEX Artwork_isFavorite ON Artwork(isFavorite);
+
+insertOrIgnore:
+INSERT OR IGNORE INTO Artwork(
+    id, title, primaryImage, artistDisplayName, objectDate, culture,
+    period, dynasty, medium, dimensions, department, classification,
+    repository, cachedAt
+)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+updateMetadata:
+UPDATE Artwork
+SET title = ?,
+    primaryImage = ?,
+    artistDisplayName = ?,
+    objectDate = ?,
+    culture = ?,
+    period = ?,
+    dynasty = ?,
+    medium = ?,
+    dimensions = ?,
+    department = ?,
+    classification = ?,
+    repository = ?,
+    cachedAt = ?
+WHERE id = ?;
+
+selectById:
+SELECT *
+FROM Artwork
+WHERE id = ?;
+
+selectFavorites:
+SELECT *
+FROM Artwork
+WHERE isFavorite = 1
+ORDER BY favoritedAt DESC;
+
+isFavorite:
+SELECT isFavorite
+FROM Artwork
+WHERE id = ?;
+
+setFavorite:
+UPDATE Artwork
+SET isFavorite = ?, favoritedAt = ?
+WHERE id = ?;
+
+deleteIfOrphan:
+DELETE FROM Artwork
+WHERE id = ?
+  AND isFavorite = 0
+  AND NOT EXISTS (SELECT 1 FROM ExhibitArtwork WHERE artworkId = Artwork.id);
