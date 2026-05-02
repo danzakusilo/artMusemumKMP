@@ -15,7 +15,8 @@ kotlin {
         }
     }
 
-    iosArm64()
+        iosArm64()
+    iosX64()
     iosSimulatorArm64()
 
     sourceSets {

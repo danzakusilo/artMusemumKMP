@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.composeHotReload)
+    alias(libs.plugins.kotlinSerialization)
 }
 
 kotlin {
@@ -17,6 +18,7 @@ kotlin {
 
     listOf(
         iosArm64(),
+    iosX64(),
         iosSimulatorArm64()
     ).forEach { iosTarget ->
         iosTarget.binaries.framework {
@@ -33,6 +35,7 @@ kotlin {
         commonMain.dependencies {
             implementation(projects.feature.artworks.ui)
             implementation(projects.feature.artworks.data)
+            implementation(projects.feature.homescreen.ui)
             implementation(projects.core.ui)
             implementation(projects.core.common)
             implementation(projects.core.network)
@@ -49,6 +52,7 @@ kotlin {
             implementation(libs.koin.core)
             implementation(libs.koin.compose)
             implementation(libs.koin.compose.viewmodel)
+            implementation(libs.kotlinx.serialization.json)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
