@@ -16,8 +16,7 @@ kotlin {
     }
 
     listOf(
-        iosArm64(),
-        iosSimulatorArm64()
+        iosX64()
     ).forEach { iosTarget ->
         iosTarget.binaries.framework {
             baseName = "ComposeApp"
@@ -33,6 +32,7 @@ kotlin {
         commonMain.dependencies {
             implementation(projects.feature.artworks.ui)
             implementation(projects.feature.artworks.data)
+            implementation(projects.feature.homescreen.ui)
             implementation(projects.core.ui)
             implementation(projects.core.common)
             implementation(projects.core.network)
