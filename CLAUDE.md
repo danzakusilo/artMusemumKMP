@@ -1,0 +1,272 @@
+# Museum Demo — Project Context for Claude
+
+## Purpose
+KMP demo app showcasing corporate large-scale developer skills: shared UI and business logic across platforms, strict multi-module Clean Architecture, lean and reusable abstractions.
+
+---
+
+## Target Platforms
+| Platform | Target |
+|---|---|
+| Android | `androidTarget` (minSdk 24) |
+| iOS | `iosArm64`, `iosSimulatorArm64` |
+
+---
+
+## Tech Stack
+| Library | Purpose |
+|---|---|
+| Compose Multiplatform | Shared UI across all targets |
+| Koin | Dependency injection (no reflection, KMP-native) |
+| Ktor Client | HTTP networking |
+| kotlinx.serialization | JSON parsing (Ktor plugin) |
+| SQLDelight | Local persistence (favorites, user exhibits, artwork cache) |
+| Coil 3 | Async image loading (KMP-native) |
+| JetBrains Navigation Compose | Multiplatform type-safe navigation |
+| kotlinx.coroutines | Async / Flow |
+
+All dependencies managed via `gradle/libs.versions.toml`.
+
+---
+
+## Feature: Museum Artworks Explorer
+
+---
+
+## Module Graph
+
+```
+:composeApp
+    └── :feature:artworks:ui
+    └── :core:ui
+
+:feature:artworks:ui
+    └── :feature:artworks:domain
+    └── :core:ui
+    └── :core:common
+
+:feature:artworks:data
+    └── :feature:artworks:domain
+    └── :core:network
+    └── :core:database
+    └── :core:common
+
+:feature:artworks:domain
+    └── :core:common
+
+:core:network
+    └── :core:common
+
+:core:database
+    └── :core:common
+
+:core:ui
+    └── :core:common
+
+:core:common   (no internal deps)
+```
+
+**Rule**: `:composeApp` wires DI and navigation only — it never imports domain or data directly. Data never imports UI. Domain imports nothing except `:core:common`.
+
+---
+
+## Module Details
+
+### `:composeApp`
+- Platform entry points: `MainActivity`, `MainViewController`, `main.kt` (desktop), `main.kt` (JS)
+- Hosts the `NavHost` and root `App` composable
+- Calls `startKoin { }` aggregating all DI modules
+- `androidApplication` plugin; all other modules use `androidLibrary` or pure KMP
+
+### `:core:common`
+```
+commonMain/
+  result/
+    Result.kt          sealed class Result<out T> { data class Success; data class Error }
+    AppError.kt        sealed class AppError (NetworkError, DatabaseError, UnknownError)
+  dispatchers/
+    AppDispatchers.kt  object exposing io/default/main (Dispatchers.IO/Default/Main)
+```
+
+### `:core:network`
+```
+commonMain/
+  HttpClientFactory.kt   creates Ktor HttpClient with ContentNegotiation+Json, logging
+  di/
+    NetworkModule.kt      Koin module: single<HttpClient>
+```
+
+### `:core:database`
+```
+commonMain/
+  DatabaseDriverFactory.kt       expect class, one actual per platform
+  di/
+    DatabaseModule.kt            Koin module: single<SqlDriver>, single<MuseumDatabase>;
+                                 expect fun platformDatabaseModule()
+  (androidMain|iosMain)/
+    DatabaseDriverFactory.kt     actual class
+    di/DatabaseModule.<plat>.kt  actual platformDatabaseModule { single { DatabaseDriverFactory(...) } }
+sqldelight/
+  dev/danya/museum/core/database/
+    Artwork.sq            cached artwork rows + isFavorite flag, upsert/select/setFavorite/deleteIfOrphan
+    Exhibit.sq            user-created exhibits, insert/selectAll/rename/delete
+    ExhibitArtwork.sq     join table with ON DELETE CASCADE on both sides
+```
+
+### `:core:ui`
+```
+commonMain/
+  theme/
+    MuseumTheme.kt               MaterialTheme wrapper, picks light/dark, provides extended colors
+    Color.kt                     MuseumPalette (raw brand constants — escape-hatch only)
+                                 + light/dark M3 ColorScheme
+    MuseumExtendedColors.kt      app-specific semantic colors (favorite, exhibit, tag) +
+                                 MaterialTheme.extendedColors accessor
+    Typography.kt
+  component/
+    LoadingView.kt
+    ErrorView.kt
+    ArtworkCard.kt               reusable card (image via Coil, title, date)
+```
+
+### `:feature:artworks:domain`
+```
+commonMain/
+  entity/
+    Artwork.kt            data class (id: Int, title, primaryImageUrl?, artistName?,
+                          objectDate?, culture?, period?, dynasty?, medium?, dimensions?,
+                          department, classification?, repository?)
+    ArtworkSummary.kt     lightweight list item (id, title, primaryImageUrl?, artistName?, objectDate?)
+    Exhibit.kt            data class (id: Long, name, createdAt, artworkCount)
+  repository/
+    ArtworkRepository.kt  interface (suspend + Flow only, no platform types)
+    ExhibitRepository.kt  interface (CRUD + add/remove artwork)
+  usecase/
+    SearchArtworksUseCase.kt
+    GetArtworkDetailUseCase.kt
+    GetFavoritesUseCase.kt
+    ToggleFavoriteUseCase.kt
+    GetExhibitsUseCase.kt
+    CreateExhibitUseCase.kt
+    AddArtworkToExhibitUseCase.kt
+    RemoveArtworkFromExhibitUseCase.kt
+```
+
+### `:feature:artworks:data`
+```
+commonMain/
+  remote/
+    dto/
+      ArtworkDetailDto.kt    @Serializable, maps from API JSON
+      SearchResultDto.kt
+    ArtworkApiService.kt     Ktor calls, returns DTOs
+  local/
+    ArtworkLocalDataSource.kt   SQLDelight-backed artwork cache + favorites
+    ExhibitLocalDataSource.kt   SQLDelight-backed exhibits + join-table CRUD
+  mapper/
+    ArtworkMapper.kt          DTO → domain entity
+  repository/
+    ArtworkRepositoryImpl.kt  implements domain repository
+  di/
+    ArtworksDataModule.kt     Koin module
+```
+
+### `:feature:artworks:ui`
+```
+commonMain/
+  list/
+    ArtworkListScreen.kt
+    ArtworkListViewModel.kt
+    ArtworkListState.kt      sealed UI state
+  detail/
+    ArtworkDetailScreen.kt
+    ArtworkDetailViewModel.kt
+    ArtworkDetailState.kt
+  search/
+    SearchScreen.kt
+    SearchViewModel.kt
+    SearchState.kt
+  favorites/
+    FavoritesScreen.kt
+    FavoritesViewModel.kt
+  nav/
+    ArtworksNavGraph.kt      nested NavGraph with typed routes
+  di/
+    ArtworksPresentationModule.kt   Koin module (viewModel { })
+```
+
+---
+
+## Architecture Conventions
+
+### Result type
+All repository and use-case public APIs return either:
+- `suspend fun → Result<T>` for single-shot operations
+- `Flow<Result<T>>` for reactive streams
+
+Never throw across layer boundaries. Map exceptions to `AppError` in the data layer.
+
+### Use Cases
+- One public `operator fun invoke(...)` entry point
+- Thin: validate input → call repository → map result
+- No UI logic, no platform types
+
+### ViewModels
+- Extend `ViewModel` from `lifecycle-viewmodel`
+- Expose a single `StateFlow<State>` (sealed class) per screen
+- One ViewModel per screen; no shared ViewModels across screens
+- Inject use cases via constructor (Koin `viewModel { }`)
+
+### Koin
+- Module defined in the layer that owns the binding
+  - `ArtworksDataModule` binds `ArtworkRepository` → `ArtworkRepositoryImpl`
+  - `ArtworksPresentationModule` registers ViewModels
+  - `NetworkModule`, `DatabaseModule` in respective `:core:*` modules
+- `:composeApp` aggregates all modules: `startKoin { modules(coreModules + featureModules) }`
+- Use `koinViewModel()` in Composables
+
+### Navigation
+- JetBrains Navigation Compose (multiplatform)
+- Typed routes via `@Serializable` data objects/classes
+- Each feature owns its `NavGraph` extension; `:composeApp` composes them
+
+### Theme
+- Pick colors via `MaterialTheme.colorScheme.*` (M3 roles) or `MaterialTheme.extendedColors.*` (favorite, exhibit, tag).
+- `MuseumPalette` constants are escape-hatch only — use them in logos / splash / illustrations where theming is intentionally bypassed. If you keep wanting one in a screen, add a slot to `MuseumExtendedColors` instead.
+- `error` is generic Material red. Terracotta belongs to `favorite` only.
+- No Material You dynamic color — brand identity overrides system tinting.
+
+### SQLDelight
+- Scope: user-curated cache — favorites, user-created exhibits, and the artwork rows referenced by either. Not a full network response cache.
+- One database: `MuseumDatabase`. Schema split across `Artwork.sq` / `Exhibit.sq` / `ExhibitArtwork.sq` (one file per aggregate).
+- `packageName = "dev.danya.museum.core.database"` set in `core/database/build.gradle.kts`; schema path mirrors it.
+- Driver created via `expect class DatabaseDriverFactory` with platform `actual` implementations.
+- Enable `PRAGMA foreign_keys = ON` in the driver setup so `ON DELETE CASCADE` on the join table actually fires.
+- Cache hygiene: after un-favoriting or removing from an exhibit, call `Artwork.deleteIfOrphan` to drop rows no longer referenced.
+
+### No-go rules
+- Domain must not depend on Ktor, SQLDelight, Coil, or any platform API
+- Data must not depend on Compose or UI types
+- No `lateinit` backing fields on ViewModel state — use `MutableStateFlow`
+- No `GlobalScope` — always use `viewModelScope` or injected scope
+
+---
+
+## Build Notes
+- Version catalog: `gradle/libs.versions.toml` — all deps declared here, no inline versions
+- `TYPESAFE_PROJECT_ACCESSORS` enabled — use `projects.core.common` syntax in `build.gradle.kts`
+- All library modules: `kotlinMultiplatform` + `androidLibrary` plugins
+- Configuration cache: enabled (`org.gradle.configuration-cache=true`)
+
+---
+
+## Implementation Order
+1. Scaffold all modules (empty `build.gradle.kts` + package stubs) and wire `settings.gradle.kts`
+2. `:core:common` — Result, AppError, dispatchers
+3. `:core:network` — HttpClient factory + Koin module
+4. `:core:database` — SQLDelight setup, driver factories, schema
+5. `:core:ui` — theme + shared components
+6. `:feature:artworks:domain` — entities, repository interface, use cases
+7. `:feature:artworks:data` — DTOs, API service, local source, repo impl, DI
+8. `:feature:artworks:ui` — ViewModels, states, screens, navigation, DI
+9. `:composeApp` — wire navigation, aggregate Koin, clean up entry points
