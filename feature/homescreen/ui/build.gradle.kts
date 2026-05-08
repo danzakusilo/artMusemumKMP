@@ -19,7 +19,6 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            implementation(projects.feature.artworks.domain)
             implementation(projects.core.common)
             implementation(projects.core.ui)
             implementation(libs.compose.runtime)
@@ -27,13 +26,9 @@ kotlin {
             implementation(libs.compose.material3)
             implementation(libs.compose.ui)
             implementation(libs.compose.components.resources)
-            implementation(libs.androidx.lifecycle.viewmodel.compose)
-            implementation(libs.androidx.lifecycle.runtime.compose)
             implementation(libs.navigation.compose)
             implementation(libs.koin.core)
             implementation(libs.koin.compose)
-            implementation(libs.koin.compose.viewmodel)
-            implementation(libs.coil.compose)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

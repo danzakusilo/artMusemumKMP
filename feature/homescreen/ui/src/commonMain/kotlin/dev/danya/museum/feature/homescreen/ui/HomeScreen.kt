@@ -1,77 +1,134 @@
 package dev.danya.museum.feature.homescreen.ui
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.*
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
-import dev.danya.museum.core.ui.component.ArtworkCard
-import org.koin.compose.viewmodel.koinViewModel
+import demo.feature.homescreen.ui.generated.resources.Res
+import demo.feature.homescreen.ui.generated.resources.promo_discover
+import demo.feature.homescreen.ui.generated.resources.promo_gallery
+import demo.feature.homescreen.ui.generated.resources.promo_heart
+import dev.danya.museum.core.ui.theme.extendedColors
+import org.jetbrains.compose.resources.DrawableResource
+import org.jetbrains.compose.resources.painterResource
 
 @Composable
-fun HomeScreen(viewModel: HomeScreenViewModel = koinViewModel()) {
-    val state by viewModel.state.collectAsState()
+fun HomeScreen(
+    onNavigateToArtworks: () -> Unit,
+    onNavigateToFavorites: () -> Unit,
+    onNavigateToFeed: () -> Unit,
+) {
+    val colors = MaterialTheme.colorScheme
+    val extended = MaterialTheme.extendedColors
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
+            .padding(horizontal = 20.dp, vertical = 24.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Text(
-            text = "Recently Updated",
-            style = MaterialTheme.typography.titleMedium,
+            text = "Museum",
+            style = MaterialTheme.typography.headlineLarge,
+            color = colors.onBackground,
         )
-        Spacer(Modifier.height(8.dp))
-        when {
-            state.isLoadingRecents -> CircularProgressIndicator()
-            state.recentsError -> Text(
-                text = "Couldn't load recent artworks",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.error,
-            )
+        PromoCard(
+            title = "See new Artworks!",
+            subtitle = "Explore the collection",
+            containerColor = colors.primaryContainer,
+            contentColor = colors.onPrimaryContainer,
+            illustration = Res.drawable.promo_gallery,
+            onClick = onNavigateToArtworks,
+        )
 
-            state.recentArtworks.isNotEmpty() -> LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                items(state.recentArtworks) { artwork ->
-                    ArtworkCard(
-                        title = artwork.title,
-                        imageUrl = artwork.primaryImageUrl,
-                        artistName = artwork.artistName,
-                        objectDate = artwork.objectDate,
-                    )
-                }
-            }
-        }
-        Spacer(Modifier.height(16.dp))
-        OutlinedTextField(
-            value = state.query,
-            onValueChange = viewModel::onQueryChange,
-            label = { Text("Search query") },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
+        PromoCard(
+            title = "Browse Favourites",
+            subtitle = "Your saved masterpieces",
+            containerColor = extended.favoriteContainer,
+            contentColor = extended.onFavoriteContainer,
+            illustration = Res.drawable.promo_heart,
+            onClick = onNavigateToFavorites,
         )
-        Spacer(Modifier.height(8.dp))
-        Button(
-            onClick = viewModel::search,
-            enabled = !state.isLoading,
-            modifier = Modifier.fillMaxWidth(),
+
+        PromoCard(
+            title = "Discover",
+            subtitle = "Swipe through art",
+            containerColor = colors.secondaryContainer,
+            contentColor = colors.onSecondaryContainer,
+            illustration = Res.drawable.promo_discover,
+            onClick = onNavigateToFeed,
+        )
+    }
+}
+
+@Composable
+private fun PromoCard(
+    title: String,
+    subtitle: String,
+    containerColor: Color,
+    contentColor: Color,
+    illustration: DrawableResource,
+    onClick: () -> Unit,
+) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(20.dp),
+        color = containerColor,
+        tonalElevation = 2.dp,
+    ) {
+        Row(
+            modifier = Modifier.padding(24.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(if (state.isLoading) "Loading…" else "Fetch from API")
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.Center,
+            ) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = contentColor,
+                )
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = contentColor.copy(alpha = 0.7f),
+                )
+            }
+            Image(
+                painter = painterResource(illustration),
+                contentDescription = null,
+                modifier = Modifier.size(120.dp),
+                contentScale = ContentScale.Fit,
+                colorFilter = ColorFilter.tint(
+                    color = contentColor.copy(alpha = 0.35f),
+                    blendMode = BlendMode.SrcIn,
+                ),
+            )
         }
-        Spacer(Modifier.height(16.dp))
-        OutlinedTextField(
-            value = state.result,
-            onValueChange = {},
-            readOnly = true,
-            label = { Text("Response") },
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f),
-        )
     }
 }

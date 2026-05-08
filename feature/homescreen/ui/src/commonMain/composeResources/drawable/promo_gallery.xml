@@ -1,0 +1,36 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp"
+    android:height="120dp"
+    android:viewportWidth="120"
+    android:viewportHeight="120">
+
+    <!-- Back frame, rotated -->
+    <group
+        android:rotation="-8"
+        android:pivotX="42"
+        android:pivotY="55">
+        <path
+            android:pathData="M12,14 L72,14 L72,94 L12,94 Z"
+            android:strokeColor="#000000"
+            android:strokeWidth="3"
+            android:fillColor="#00000000" />
+    </group>
+
+    <!-- Front frame -->
+    <path
+        android:pathData="M36,18 L108,18 L108,100 L36,100 Z"
+        android:strokeColor="#000000"
+        android:strokeWidth="3"
+        android:fillColor="#00000000" />
+
+    <!-- Mountain silhouette inside front frame -->
+    <path
+        android:pathData="M40,92 L56,50 L68,66 L84,40 L104,92 Z"
+        android:fillColor="#000000"
+        android:fillAlpha="0.5" />
+
+    <!-- Sun -->
+    <path
+        android:pathData="M50,36 A6,6 0 1,1 50,35.99 Z"
+        android:fillColor="#000000" />
+</vector>
