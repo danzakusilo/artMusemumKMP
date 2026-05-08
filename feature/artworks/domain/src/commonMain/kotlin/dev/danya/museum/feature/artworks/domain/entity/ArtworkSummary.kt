@@ -6,4 +6,5 @@ data class ArtworkSummary(
     val primaryImageUrl: String?,
     val artistName: String?,
     val objectDate: String?,
+    val department: String,
 )

@@ -27,6 +27,7 @@ fun ArtworkDetailDto.toSummary(): ArtworkSummary = ArtworkSummary(
     primaryImageUrl = primaryImageSmall?.takeIf { it.isNotBlank() } ?: primaryImage?.takeIf { it.isNotBlank() },
     artistName = artistDisplayName?.takeIf { it.isNotBlank() },
     objectDate = objectDate?.takeIf { it.isNotBlank() },
+    department = department,
 )
 
 fun ArtworkEntity.toSummary(): ArtworkSummary = ArtworkSummary(
@@ -35,6 +36,7 @@ fun ArtworkEntity.toSummary(): ArtworkSummary = ArtworkSummary(
     primaryImageUrl = primaryImage,
     artistName = artistDisplayName,
     objectDate = objectDate,
+    department = department,
 )
 
 fun ArtworkEntity.toDomain(): Artwork = Artwork(
