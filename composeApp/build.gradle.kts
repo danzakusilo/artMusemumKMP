@@ -35,6 +35,7 @@ kotlin {
             implementation(projects.feature.artworks.ui)
             implementation(projects.feature.artworks.data)
             implementation(projects.feature.homescreen.ui)
+            implementation(projects.feature.search.ui)
             implementation(projects.core.ui)
             implementation(projects.core.common)
             implementation(projects.core.network)

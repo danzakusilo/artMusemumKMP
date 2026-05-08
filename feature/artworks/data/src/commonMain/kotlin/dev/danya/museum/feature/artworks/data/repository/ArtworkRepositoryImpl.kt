@@ -30,18 +30,27 @@ class ArtworkRepositoryImpl(
     private val feedIdPool = mutableListOf<Int>()
     private var feedCursor = 0
 
-    override suspend fun searchArtworks(query: String): Result<List<ArtworkSummary>> =
-        runCatching { api.searchAndFetch(query).map { it.toSummary() } }
+    override suspend fun searchArtworks(
+        query: String,
+        departmentId: Int?,
+        artistOrCulture: Boolean,
+    ): Result<List<ArtworkSummary>> =
+        runCatching { api.searchAndFetch(query, departmentId, artistOrCulture).map { it.toSummary() } }
             .toResult()
 
-    override suspend fun getRecentArtworks(): Result<List<ArtworkSummary>> =
+    override suspend fun getRecentArtworks(): Result<List<Artwork>> =
         runCatching {
             val cutoff = Clock.System.now()
                 .minus(3.days)
                 .toLocalDateTime(TimeZone.UTC)
                 .date
                 .toString()
-            api.fetchRecentArtworks(cutoff).map { it.toSummary() }
+            api.fetchRecentArtworks(cutoff)
+                .filter { dto ->
+                    !dto.primaryImageSmall.isNullOrBlank() || !dto.primaryImage.isNullOrBlank()
+                }
+                .also { dtos -> dtos.forEach { upsertDto(it) } }
+                .map { it.toDomain() }
         }.toResult()
 
     override suspend fun getArtworkDetail(id: Int): Result<Artwork> =

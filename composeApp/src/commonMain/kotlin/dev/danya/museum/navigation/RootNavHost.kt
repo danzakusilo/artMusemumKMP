@@ -26,6 +26,8 @@ import dev.danya.museum.feature.artworks.ui.nav.FeedRoute
 import dev.danya.museum.feature.artworks.ui.nav.feedGraph
 import dev.danya.museum.feature.homescreen.ui.nav.HomeRoute
 import dev.danya.museum.feature.homescreen.ui.nav.homeScreenGraph
+import dev.danya.museum.feature.search.ui.nav.SearchRoute
+import dev.danya.museum.feature.search.ui.nav.searchGraph
 import org.jetbrains.compose.resources.painterResource
 
 @Composable
@@ -99,6 +101,18 @@ fun RootNavHost(
                         restoreState = true
                     }
                 },
+                onNavigateToSearch = {
+                    navController.navigate(SearchRoute) {
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                },
+            )
+            searchGraph(
+                onNavigateToDetail = { /* TODO: wire ArtworkDetailScreen */ },
             )
             feedGraph()
             composable<FavoritesRoute> { PlaceholderScreen("Favorites") }

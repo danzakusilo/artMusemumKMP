@@ -17,10 +17,16 @@ private const val FETCH_CONCURRENCY = 5
 
 class ArtworkApiService(private val client: HttpClient) {
 
-    suspend fun search(query: String): SearchResultDto =
+    suspend fun search(
+        query: String,
+        departmentId: Int? = null,
+        artistOrCulture: Boolean = false,
+    ): SearchResultDto =
         client.get("$BASE_URL/search") {
             parameter("q", query)
             parameter("hasImages", true)
+            if (departmentId != null) parameter("departmentId", departmentId)
+            if (artistOrCulture) parameter("artistOrCulture", true)
         }.body()
 
     suspend fun getObjectSingle(id: Int): ArtworkDetailDto =
@@ -40,8 +46,13 @@ class ArtworkApiService(private val client: HttpClient) {
             parameter("departmentIds", departmentId)
         }.body<SearchResultDto>().objectIDs.orEmpty()
 
-    suspend fun searchAndFetch(query: String): List<ArtworkDetailDto> {
-        val ids = search(query).objectIDs?.take(SEARCH_RESULT_LIMIT) ?: return emptyList()
+    suspend fun searchAndFetch(
+        query: String,
+        departmentId: Int? = null,
+        artistOrCulture: Boolean = false,
+    ): List<ArtworkDetailDto> {
+        val ids = search(query, departmentId, artistOrCulture)
+            .objectIDs?.take(SEARCH_RESULT_LIMIT) ?: return emptyList()
         return fetchArtworkDetails(ids)
     }
 

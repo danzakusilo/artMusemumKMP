@@ -9,6 +9,7 @@ import dev.danya.museum.core.ui.theme.MuseumTheme
 import dev.danya.museum.feature.artworks.data.di.artworksDataModule
 import dev.danya.museum.feature.artworks.ui.di.artworksPresentationModule
 import dev.danya.museum.feature.homescreen.ui.di.homescreenPresentationModule
+import dev.danya.museum.feature.search.ui.di.searchPresentationModule
 import dev.danya.museum.navigation.RootNavHost
 import org.koin.compose.KoinApplication
 import org.koin.core.logger.Level
@@ -27,6 +28,7 @@ fun App(platformSetup: org.koin.core.KoinApplication.() -> Unit = {}) {
             artworksDataModule,
             artworksPresentationModule,
             homescreenPresentationModule,
+            searchPresentationModule,
         )
     }) {
         MuseumTheme {

@@ -8,12 +8,14 @@ fun NavGraphBuilder.homeScreenGraph(
     onNavigateToArtworks: () -> Unit,
     onNavigateToFavorites: () -> Unit,
     onNavigateToFeed: () -> Unit,
+    onNavigateToSearch: () -> Unit,
 ) {
     composable<HomeRoute> {
         HomeScreen(
             onNavigateToArtworks = onNavigateToArtworks,
             onNavigateToFavorites = onNavigateToFavorites,
             onNavigateToFeed = onNavigateToFeed,
+            onNavigateToSearch = onNavigateToSearch,
         )
     }
 }

@@ -29,6 +29,7 @@ import demo.feature.homescreen.ui.generated.resources.Res
 import demo.feature.homescreen.ui.generated.resources.promo_discover
 import demo.feature.homescreen.ui.generated.resources.promo_gallery
 import demo.feature.homescreen.ui.generated.resources.promo_heart
+import demo.feature.homescreen.ui.generated.resources.promo_search
 import dev.danya.museum.core.ui.theme.extendedColors
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
@@ -38,6 +39,7 @@ fun HomeScreen(
     onNavigateToArtworks: () -> Unit,
     onNavigateToFavorites: () -> Unit,
     onNavigateToFeed: () -> Unit,
+    onNavigateToSearch: () -> Unit,
 ) {
     val colors = MaterialTheme.colorScheme
     val extended = MaterialTheme.extendedColors
@@ -45,6 +47,7 @@ fun HomeScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp, vertical = 24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
@@ -78,6 +81,15 @@ fun HomeScreen(
             contentColor = colors.onSecondaryContainer,
             illustration = Res.drawable.promo_discover,
             onClick = onNavigateToFeed,
+        )
+
+        PromoCard(
+            title = "Search",
+            subtitle = "Find any artwork",
+            containerColor = colors.tertiaryContainer,
+            contentColor = colors.onTertiaryContainer,
+            illustration = Res.drawable.promo_search,
+            onClick = onNavigateToSearch,
         )
     }
 }
