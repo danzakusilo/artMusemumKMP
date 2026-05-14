@@ -7,7 +7,10 @@ import dev.danya.museum.feature.artworks.domain.entity.Exhibit
 import dev.danya.museum.feature.artworks.domain.usecase.AddArtworkToExhibitUseCase
 import dev.danya.museum.feature.artworks.domain.usecase.CreateExhibitUseCase
 import dev.danya.museum.feature.artworks.domain.usecase.GetArtworkDetailUseCase
+import dev.danya.museum.feature.artworks.domain.usecase.GetExhibitIdsForArtworkUseCase
 import dev.danya.museum.feature.artworks.domain.usecase.GetExhibitsUseCase
+import dev.danya.museum.feature.artworks.domain.usecase.IsFavoriteUseCase
+import dev.danya.museum.feature.artworks.domain.usecase.RemoveArtworkFromExhibitUseCase
 import dev.danya.museum.feature.artworks.domain.usecase.ToggleFavoriteUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -21,6 +24,9 @@ class ArtworkDetailViewModel(
     private val getExhibits: GetExhibitsUseCase,
     private val addArtworkToExhibit: AddArtworkToExhibitUseCase,
     private val createExhibit: CreateExhibitUseCase,
+    private val getExhibitIdsForArtwork: GetExhibitIdsForArtworkUseCase,
+    private val removeArtworkFromExhibit: RemoveArtworkFromExhibitUseCase,
+    private val isFavoriteUseCase: IsFavoriteUseCase,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow<ArtworkDetailState>(ArtworkDetailState.Loading)
@@ -28,20 +34,27 @@ class ArtworkDetailViewModel(
 
     private var isFavorite = false
     private var exhibits: List<Exhibit> = emptyList()
+    private var artworkExhibitIds: Set<Long> = emptySet()
 
     init {
         load()
         observeExhibits()
+        observeArtworkExhibits()
     }
 
     private fun load() {
         viewModelScope.launch {
             _state.value = ArtworkDetailState.Loading
+            val favResult = isFavoriteUseCase(artworkId)
+            if (favResult is Result.Success) {
+                isFavorite = favResult.data
+            }
             when (val result = getArtworkDetail(artworkId)) {
                 is Result.Success -> _state.value = ArtworkDetailState.Content(
                     artwork = result.data,
                     isFavorite = isFavorite,
                     exhibits = exhibits,
+                    artworkExhibitIds = artworkExhibitIds,
                 )
                 is Result.Error -> _state.value = ArtworkDetailState.Error(
                     result.error.toString(),
@@ -58,6 +71,28 @@ class ArtworkDetailViewModel(
                     val current = _state.value as? ArtworkDetailState.Content ?: return@collect
                     _state.value = current.copy(exhibits = exhibits)
                 }
+            }
+        }
+    }
+
+    private fun observeArtworkExhibits() {
+        viewModelScope.launch {
+            getExhibitIdsForArtwork(artworkId).collect { result ->
+                if (result is Result.Success) {
+                    artworkExhibitIds = result.data
+                    val current = _state.value as? ArtworkDetailState.Content ?: return@collect
+                    _state.value = current.copy(artworkExhibitIds = artworkExhibitIds)
+                }
+            }
+        }
+    }
+
+    fun onToggleExhibit(exhibitId: Long) {
+        viewModelScope.launch {
+            if (exhibitId in artworkExhibitIds) {
+                removeArtworkFromExhibit(exhibitId, artworkId)
+            } else {
+                addArtworkToExhibit(exhibitId, artworkId)
             }
         }
     }

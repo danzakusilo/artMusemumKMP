@@ -14,19 +14,16 @@ class ExhibitLocalDataSource(
     private val dispatchers: AppDispatchers,
 ) {
     fun getExhibits(): Flow<List<Exhibit>> =
-        db.exhibitQueries.selectAll()
+        db.exhibitQueries.selectAllWithCount()
             .asFlow()
             .mapToList(dispatchers.io)
             .map { rows ->
                 rows.map { row ->
-                    val count = db.exhibitArtworkQueries
-                        .countForExhibit(row.id)
-                        .executeAsOne()
                     Exhibit(
                         id = row.id,
                         name = row.name,
                         createdAt = row.createdAt,
-                        artworkCount = count.toInt(),
+                        artworkCount = row.artworkCount.toInt(),
                     )
                 }
             }
@@ -70,4 +67,15 @@ class ExhibitLocalDataSource(
             artworkId = artworkId.toLong(),
         )
     }
+
+    fun removeAllForArtwork(artworkId: Int) {
+        db.exhibitArtworkQueries.removeAllForArtwork(artworkId.toLong())
+    }
+
+    fun getExhibitIdsForArtwork(artworkId: Int): Flow<Set<Long>> =
+        db.exhibitArtworkQueries
+            .exhibitsContainingArtwork(artworkId.toLong())
+            .asFlow()
+            .mapToList(dispatchers.io)
+            .map { exhibits -> exhibits.map { it.id }.toSet() }
 }

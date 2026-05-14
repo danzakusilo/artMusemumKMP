@@ -13,6 +13,6 @@ val artworksDataModule = module {
     single { ArtworkApiService(get()) }
     single { ArtworkLocalDataSource(get(), get()) }
     single { ExhibitLocalDataSource(get(), get()) }
-    single<ArtworkRepository> { ArtworkRepositoryImpl(get(), get()) }
+    single<ArtworkRepository> { ArtworkRepositoryImpl(get(), get(), get()) }
     single<ExhibitRepository> { ExhibitRepositoryImpl(get()) }
 }

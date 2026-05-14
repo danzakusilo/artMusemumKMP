@@ -15,5 +15,6 @@ interface ArtworkRepository {
     suspend fun getRecentArtworks(): Result<List<Artwork>>
     suspend fun getArtworkFeedPage(limit: Int): Result<List<Artwork>>
     fun getFavorites(): Flow<Result<List<ArtworkSummary>>>
+    suspend fun isFavorite(artworkId: Int): Result<Boolean>
     suspend fun toggleFavorite(artworkId: Int): Result<Unit>
 }

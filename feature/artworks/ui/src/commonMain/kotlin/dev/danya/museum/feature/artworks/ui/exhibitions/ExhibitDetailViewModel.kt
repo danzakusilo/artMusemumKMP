@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.danya.museum.core.common.result.Result
 import dev.danya.museum.feature.artworks.domain.usecase.GetExhibitArtworksUseCase
+import dev.danya.museum.feature.artworks.domain.usecase.RenameExhibitUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -12,6 +13,7 @@ import kotlinx.coroutines.launch
 class ExhibitDetailViewModel(
     private val exhibitId: Long,
     private val getExhibitArtworks: GetExhibitArtworksUseCase,
+    private val renameExhibit: RenameExhibitUseCase,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow<ExhibitDetailState>(ExhibitDetailState.Loading)
@@ -32,6 +34,12 @@ class ExhibitDetailViewModel(
                     is Result.Error -> ExhibitDetailState.Error(result.error.toString())
                 }
             }
+        }
+    }
+
+    fun onRename(name: String) {
+        viewModelScope.launch {
+            renameExhibit(exhibitId, name)
         }
     }
 }

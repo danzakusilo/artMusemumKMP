@@ -1,6 +1,7 @@
 package dev.danya.museum.feature.artworks.ui.detail
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -39,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import dev.danya.museum.core.ui.theme.extendedColors
 import dev.danya.museum.feature.artworks.domain.entity.Artwork
+import dev.danya.museum.feature.artworks.domain.entity.Exhibit
 import dev.danya.museum.feature.artworks.ui.component.ExhibitBottomSheet
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
@@ -73,21 +75,16 @@ fun ArtworkDetailScreen(
                 isFavorite = state.isFavorite,
                 onBack = onBack,
                 onToggleFavorite = viewModel::onToggleFavorite,
-                onAddToExhibit = { showExhibitSheet = true },
+                onOpenExhibitSheet = { showExhibitSheet = true },
             )
 
             if (showExhibitSheet) {
                 ExhibitBottomSheet(
                     exhibits = state.exhibits,
+                    artworkExhibitIds = state.artworkExhibitIds,
                     onDismiss = { showExhibitSheet = false },
-                    onExhibitSelected = { exhibitId ->
-                        viewModel.onAddToExhibit(exhibitId)
-                        showExhibitSheet = false
-                    },
-                    onCreateExhibit = { name ->
-                        viewModel.onCreateExhibit(name)
-                        showExhibitSheet = false
-                    },
+                    onToggleExhibit = viewModel::onToggleExhibit,
+                    onCreateExhibit = viewModel::onCreateExhibit,
                 )
             }
         }
@@ -101,7 +98,7 @@ private fun DetailContent(
     isFavorite: Boolean,
     onBack: () -> Unit,
     onToggleFavorite: () -> Unit,
-    onAddToExhibit: () -> Unit,
+    onOpenExhibitSheet: () -> Unit,
 ) {
     val favoriteColor = MaterialTheme.extendedColors.favorite
 
@@ -123,24 +120,30 @@ private fun DetailContent(
                         )
                     }
                 },
-                actions = {
-                    IconButton(onClick = onAddToExhibit) {
-                        Icon(
-                            imageVector = Icons.Filled.Add,
-                            contentDescription = "Add to exhibit",
-                            tint = MaterialTheme.extendedColors.exhibit,
-                        )
-                    }
-                },
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = onToggleFavorite) {
-                Icon(
-                    imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                    contentDescription = if (isFavorite) "Remove from favorites" else "Add to favorites",
-                    tint = if (isFavorite) favoriteColor else MaterialTheme.colorScheme.onSurface,
-                )
+            Column(
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalAlignment = Alignment.End,
+            ) {
+                FloatingActionButton(
+                    onClick = onOpenExhibitSheet,
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Add,
+                        contentDescription = "Manage exhibits",
+                        tint = MaterialTheme.extendedColors.exhibit,
+                    )
+                }
+                FloatingActionButton(onClick = onToggleFavorite) {
+                    Icon(
+                        imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                        contentDescription = if (isFavorite) "Remove from favorites" else "Add to favorites",
+                        tint = if (isFavorite) favoriteColor else MaterialTheme.colorScheme.onSurface,
+                    )
+                }
             }
         },
     ) { padding ->

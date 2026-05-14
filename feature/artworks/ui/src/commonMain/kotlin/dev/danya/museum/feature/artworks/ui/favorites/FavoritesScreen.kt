@@ -129,8 +129,9 @@ fun FavoritesScreen(
     if (showExhibitSheet) {
         ExhibitBottomSheet(
             exhibits = exhibits,
+            artworkExhibitIds = emptySet(),
             onDismiss = { showExhibitSheet = false },
-            onExhibitSelected = { exhibitId ->
+            onToggleExhibit = { exhibitId ->
                 viewModel.onAddSelectedToExhibit(exhibitId)
                 showExhibitSheet = false
             },

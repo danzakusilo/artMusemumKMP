@@ -15,4 +15,5 @@ interface ExhibitRepository {
     suspend fun renameExhibit(id: Long, name: String): Result<Unit>
     suspend fun addArtworkToExhibit(exhibitId: Long, artworkId: Int): Result<Unit>
     suspend fun removeArtworkFromExhibit(exhibitId: Long, artworkId: Int): Result<Unit>
+    fun getExhibitIdsForArtwork(artworkId: Int): Flow<Result<Set<Long>>>
 }

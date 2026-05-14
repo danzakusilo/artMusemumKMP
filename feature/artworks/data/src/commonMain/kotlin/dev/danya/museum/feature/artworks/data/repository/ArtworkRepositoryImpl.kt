@@ -3,6 +3,7 @@ package dev.danya.museum.feature.artworks.data.repository
 import dev.danya.museum.core.common.result.AppError
 import dev.danya.museum.core.common.result.Result
 import dev.danya.museum.feature.artworks.data.local.ArtworkLocalDataSource
+import dev.danya.museum.feature.artworks.data.local.ExhibitLocalDataSource
 import dev.danya.museum.feature.artworks.data.mapper.toDomain
 import dev.danya.museum.feature.artworks.data.mapper.toSummary
 import dev.danya.museum.feature.artworks.data.remote.ArtworkApiService
@@ -25,6 +26,7 @@ import kotlin.time.Duration.Companion.days
 class ArtworkRepositoryImpl(
     private val api: ArtworkApiService,
     private val local: ArtworkLocalDataSource,
+    private val exhibitLocal: ExhibitLocalDataSource,
 ) : ArtworkRepository {
 
     private val feedMutex = Mutex()
@@ -95,6 +97,9 @@ class ArtworkRepositoryImpl(
     override fun getFavorites(): Flow<Result<List<ArtworkSummary>>> =
         local.getFavorites().map { Result.Success(it) }
 
+    override suspend fun isFavorite(artworkId: Int): Result<Boolean> =
+        runCatching { local.isFavorite(artworkId) }.toResult()
+
     override suspend fun toggleFavorite(artworkId: Int): Result<Unit> =
         runCatching {
             val currently = local.isFavorite(artworkId)
@@ -106,6 +111,7 @@ class ArtworkRepositoryImpl(
                     favoritedAt = Clock.System.now().toEpochMilliseconds(),
                 )
             } else {
+                exhibitLocal.removeAllForArtwork(artworkId)
                 local.setFavorite(id = artworkId, isFavorite = false, favoritedAt = null)
                 local.deleteIfOrphan(artworkId)
             }

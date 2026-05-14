@@ -1,6 +1,7 @@
 package dev.danya.museum.feature.artworks.ui.exhibitions
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -243,8 +244,9 @@ private fun ExhibitRow(
                         imageUrl = artwork.primaryImageUrl,
                         artistName = artwork.artistName,
                         objectDate = artwork.objectDate,
-                        modifier = Modifier.width(160.dp),
-                        onClick = { onNavigateToDetail(artwork.id) },
+                        modifier = Modifier
+                            .width(160.dp)
+                            .clickable { onNavigateToDetail(artwork.id) },
                     )
                 }
             }

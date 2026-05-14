@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ListItem
@@ -30,8 +31,9 @@ import dev.danya.museum.feature.artworks.domain.entity.Exhibit
 @Composable
 fun ExhibitBottomSheet(
     exhibits: List<Exhibit>,
+    artworkExhibitIds: Set<Long>,
     onDismiss: () -> Unit,
-    onExhibitSelected: (Long) -> Unit,
+    onToggleExhibit: (Long) -> Unit,
     onCreateExhibit: (String) -> Unit,
 ) {
     val sheetState = rememberModalBottomSheetState()
@@ -47,7 +49,7 @@ fun ExhibitBottomSheet(
                 .padding(bottom = 32.dp),
         ) {
             Text(
-                text = "Add to exhibit",
+                text = "Exhibits",
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             )
@@ -84,14 +86,21 @@ fun ExhibitBottomSheet(
             }
 
             exhibits.forEach { exhibit ->
+                val isInExhibit = exhibit.id in artworkExhibitIds
                 ListItem(
                     headlineContent = { Text(exhibit.name) },
                     supportingContent = {
                         Text("${exhibit.artworkCount} artwork${if (exhibit.artworkCount != 1) "s" else ""}")
                     },
+                    trailingContent = {
+                        Checkbox(
+                            checked = isInExhibit,
+                            onCheckedChange = null,
+                        )
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable { onExhibitSelected(exhibit.id) },
+                        .clickable { onToggleExhibit(exhibit.id) },
                     tonalElevation = 0.dp,
                 )
             }

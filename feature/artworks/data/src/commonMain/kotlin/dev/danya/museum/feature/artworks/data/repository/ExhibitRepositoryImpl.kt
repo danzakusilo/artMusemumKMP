@@ -60,6 +60,9 @@ class ExhibitRepositoryImpl(
             local.removeArtwork(exhibitId, artworkId)
         }.toResult()
 
+    override fun getExhibitIdsForArtwork(artworkId: Int): Flow<Result<Set<Long>>> =
+        local.getExhibitIdsForArtwork(artworkId).map { Result.Success(it) }
+
     private fun <T> kotlin.Result<T>.toResult(): Result<T> =
         fold(
             onSuccess = { Result.Success(it) },

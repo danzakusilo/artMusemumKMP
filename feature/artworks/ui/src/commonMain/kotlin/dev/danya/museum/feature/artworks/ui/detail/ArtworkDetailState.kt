@@ -9,6 +9,7 @@ sealed class ArtworkDetailState {
         val artwork: Artwork,
         val isFavorite: Boolean,
         val exhibits: List<Exhibit> = emptyList(),
+        val artworkExhibitIds: Set<Long> = emptySet(),
     ) : ArtworkDetailState()
     data class Error(val message: String) : ArtworkDetailState()
 }

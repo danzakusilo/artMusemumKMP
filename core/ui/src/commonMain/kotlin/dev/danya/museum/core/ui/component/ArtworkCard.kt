@@ -23,12 +23,9 @@ fun ArtworkCard(
     artistName: String?,
     objectDate: String?,
     modifier: Modifier = Modifier,
-    onClick: (() -> Unit)? = null,
 ) {
     Card(
         modifier = modifier,
-        onClick = onClick ?: {},
-        enabled = onClick != null,
     ) {
         Column {
             if (imageUrl != null) {
@@ -52,6 +49,7 @@ fun ArtworkCard(
                 Text(
                     text = title,
                     style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )

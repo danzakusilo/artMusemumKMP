@@ -16,6 +16,13 @@ SELECT *
 FROM Exhibit
 ORDER BY createdAt DESC;
 
+selectAllWithCount:
+SELECT e.id, e.name, e.createdAt, COUNT(ea.artworkId) AS artworkCount
+FROM Exhibit e
+LEFT JOIN ExhibitArtwork ea ON ea.exhibitId = e.id
+GROUP BY e.id
+ORDER BY e.createdAt DESC;
+
 selectById:
 SELECT *
 FROM Exhibit

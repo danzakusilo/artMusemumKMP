@@ -47,3 +47,7 @@ FROM Exhibit e
 INNER JOIN ExhibitArtwork ea ON ea.exhibitId = e.id
 WHERE ea.artworkId = ?
 ORDER BY ea.addedAt DESC;
+
+removeAllForArtwork:
+DELETE FROM ExhibitArtwork
+WHERE artworkId = ?;
