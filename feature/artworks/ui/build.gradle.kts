@@ -36,6 +36,8 @@ kotlin {
             implementation(libs.koin.compose.viewmodel)
             implementation(libs.coil.compose)
         }
+        iosMain.dependencies {
+        }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
         }

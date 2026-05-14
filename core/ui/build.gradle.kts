@@ -27,6 +27,8 @@ kotlin {
             implementation(libs.coil.compose)
             implementation(libs.coil.network.ktor)
         }
+        iosMain.dependencies {
+        }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
         }

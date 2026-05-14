@@ -19,6 +19,8 @@ kotlin {
             implementation(projects.core.common)
             implementation(libs.kotlinx.coroutines.core)
         }
+        iosMain.dependencies {
+        }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
         }

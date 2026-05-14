@@ -30,6 +30,8 @@ kotlin {
             implementation(libs.koin.core)
             implementation(libs.koin.compose)
         }
+        iosMain.dependencies {
+        }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
         }
