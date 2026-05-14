@@ -21,6 +21,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import dev.danya.museum.feature.artworks.ui.nav.ArtworkDetailRoute
+import dev.danya.museum.feature.artworks.ui.nav.ExhibitDetailRoute
 import dev.danya.museum.feature.artworks.ui.nav.FavoritesRoute
 import dev.danya.museum.feature.artworks.ui.nav.FeedRoute
 import dev.danya.museum.feature.artworks.ui.nav.artworkDetailGraph
@@ -130,6 +131,10 @@ fun RootNavHost(
                 onNavigateToDetail = { artworkId ->
                     navController.navigate(ArtworkDetailRoute(artworkId))
                 },
+                onNavigateToExhibitDetail = { exhibitId, exhibitName ->
+                    navController.navigate(ExhibitDetailRoute(exhibitId, exhibitName))
+                },
+                onBack = { navController.popBackStack() },
             )
         }
     }

@@ -33,6 +33,14 @@ SELECT EXISTS(
     WHERE exhibitId = ? AND artworkId = ?
 );
 
+selectArtworksForExhibitLimited:
+SELECT a.*
+FROM Artwork a
+INNER JOIN ExhibitArtwork ea ON ea.artworkId = a.id
+WHERE ea.exhibitId = ?
+ORDER BY ea.addedAt DESC
+LIMIT ?;
+
 exhibitsContainingArtwork:
 SELECT e.*
 FROM Exhibit e

@@ -1,7 +1,6 @@
 package dev.danya.museum.feature.artworks.ui.favorites
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,6 +17,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
@@ -30,42 +31,123 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import dev.danya.museum.core.ui.component.ArtworkCard
 import dev.danya.museum.feature.artworks.domain.entity.ArtworkSummary
-import dev.danya.museum.feature.artworks.domain.entity.Exhibit
+import dev.danya.museum.feature.artworks.ui.component.ExhibitBottomSheet
+import dev.danya.museum.feature.artworks.ui.exhibitions.ExhibitionsTab
+import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FavoritesScreen(
     onNavigateToDetail: (Int) -> Unit,
+    onNavigateToExhibitDetail: (Long, String) -> Unit,
     viewModel: FavoritesViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsState()
     val exhibits by viewModel.exhibits.collectAsState()
     var showExhibitSheet by remember { mutableStateOf(false) }
+    val pagerState = rememberPagerState(pageCount = { 2 })
+    val coroutineScope = rememberCoroutineScope()
 
-    when (val state = state) {
+    val inSelectionMode = (state as? FavoritesState.Content)?.selectedIds?.isNotEmpty() == true
+
+    Scaffold(
+        topBar = {
+            if (inSelectionMode) {
+                val selectedCount = (state as? FavoritesState.Content)?.selectedIds?.size ?: 0
+                SelectionTopBar(
+                    selectedCount = selectedCount,
+                    onClearSelection = viewModel::onClearSelection,
+                    onSelectAll = viewModel::onSelectAll,
+                    onUnfavorite = viewModel::onUnfavoriteSelected,
+                    onAddToExhibit = { showExhibitSheet = true },
+                )
+            } else {
+                TopAppBar(title = { Text("Favorites") })
+            }
+        },
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding),
+        ) {
+            TabRow(selectedTabIndex = pagerState.currentPage) {
+                Tab(
+                    selected = pagerState.currentPage == 0,
+                    onClick = { coroutineScope.launch { pagerState.animateScrollToPage(0) } },
+                    text = { Text("Favorites") },
+                )
+                Tab(
+                    selected = pagerState.currentPage == 1,
+                    onClick = { coroutineScope.launch { pagerState.animateScrollToPage(1) } },
+                    text = { Text("Exhibitions") },
+                )
+            }
+
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.fillMaxSize(),
+            ) { page ->
+                when (page) {
+                    0 -> FavoritesTab(
+                        state = state,
+                        onNavigateToDetail = onNavigateToDetail,
+                        onSortOrderChanged = viewModel::onSortOrderChanged,
+                        onDepartmentFilterChanged = viewModel::onDepartmentFilterChanged,
+                        onToggleSelection = viewModel::onToggleSelection,
+                    )
+                    1 -> ExhibitionsTab(
+                        onNavigateToExhibit = { id, name -> onNavigateToExhibitDetail(id, name) },
+                        onNavigateToDetail = onNavigateToDetail,
+                    )
+                }
+            }
+        }
+    }
+
+    if (showExhibitSheet) {
+        ExhibitBottomSheet(
+            exhibits = exhibits,
+            onDismiss = { showExhibitSheet = false },
+            onExhibitSelected = { exhibitId ->
+                viewModel.onAddSelectedToExhibit(exhibitId)
+                showExhibitSheet = false
+            },
+            onCreateExhibit = viewModel::onCreateExhibit,
+        )
+    }
+}
+
+@Composable
+private fun FavoritesTab(
+    state: FavoritesState,
+    onNavigateToDetail: (Int) -> Unit,
+    onSortOrderChanged: (SortOrder) -> Unit,
+    onDepartmentFilterChanged: (String?) -> Unit,
+    onToggleSelection: (Int) -> Unit,
+) {
+    when (state) {
         is FavoritesState.Loading -> {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
@@ -93,31 +175,14 @@ fun FavoritesScreen(
             FavoritesContent(
                 state = state,
                 onNavigateToDetail = onNavigateToDetail,
-                onSortOrderChanged = viewModel::onSortOrderChanged,
-                onDepartmentFilterChanged = viewModel::onDepartmentFilterChanged,
-                onToggleSelection = viewModel::onToggleSelection,
-                onSelectAll = viewModel::onSelectAll,
-                onClearSelection = viewModel::onClearSelection,
-                onUnfavoriteSelected = viewModel::onUnfavoriteSelected,
-                onShowExhibitSheet = { showExhibitSheet = true },
+                onSortOrderChanged = onSortOrderChanged,
+                onDepartmentFilterChanged = onDepartmentFilterChanged,
+                onToggleSelection = onToggleSelection,
             )
         }
     }
-
-    if (showExhibitSheet) {
-        ExhibitBottomSheet(
-            exhibits = exhibits,
-            onDismiss = { showExhibitSheet = false },
-            onExhibitSelected = { exhibitId ->
-                viewModel.onAddSelectedToExhibit(exhibitId)
-                showExhibitSheet = false
-            },
-            onCreateExhibit = viewModel::onCreateExhibit,
-        )
-    }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun FavoritesContent(
     state: FavoritesState.Content,
@@ -125,49 +190,25 @@ private fun FavoritesContent(
     onSortOrderChanged: (SortOrder) -> Unit,
     onDepartmentFilterChanged: (String?) -> Unit,
     onToggleSelection: (Int) -> Unit,
-    onSelectAll: () -> Unit,
-    onClearSelection: () -> Unit,
-    onUnfavoriteSelected: () -> Unit,
-    onShowExhibitSheet: () -> Unit,
 ) {
     val inSelectionMode = state.selectedIds.isNotEmpty()
 
-    Scaffold(
-        topBar = {
-            if (inSelectionMode) {
-                SelectionTopBar(
-                    selectedCount = state.selectedIds.size,
-                    onClearSelection = onClearSelection,
-                    onSelectAll = onSelectAll,
-                    onUnfavorite = onUnfavoriteSelected,
-                    onAddToExhibit = onShowExhibitSheet,
-                )
-            } else {
-                TopAppBar(title = { Text("Favorites") })
-            }
-        },
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding),
-        ) {
-            FilterRow(
-                sortOrder = state.sortOrder,
-                departmentFilter = state.departmentFilter,
-                availableDepartments = state.availableDepartments,
-                onSortOrderChanged = onSortOrderChanged,
-                onDepartmentFilterChanged = onDepartmentFilterChanged,
-            )
-            FavoritesList(
-                artworks = state.artworks,
-                selectedIds = state.selectedIds,
-                inSelectionMode = inSelectionMode,
-                onNavigateToDetail = onNavigateToDetail,
-                onToggleSelection = onToggleSelection,
-                modifier = Modifier.weight(1f),
-            )
-        }
+    Column(modifier = Modifier.fillMaxSize()) {
+        FilterRow(
+            sortOrder = state.sortOrder,
+            departmentFilter = state.departmentFilter,
+            availableDepartments = state.availableDepartments,
+            onSortOrderChanged = onSortOrderChanged,
+            onDepartmentFilterChanged = onDepartmentFilterChanged,
+        )
+        FavoritesList(
+            artworks = state.artworks,
+            selectedIds = state.selectedIds,
+            inSelectionMode = inSelectionMode,
+            onNavigateToDetail = onNavigateToDetail,
+            onToggleSelection = onToggleSelection,
+            modifier = Modifier.weight(1f),
+        )
     }
 }
 
@@ -316,79 +357,6 @@ private fun FavoritesList(
                     artistName = artwork.artistName,
                     objectDate = artwork.objectDate,
                     modifier = Modifier.weight(1f),
-                )
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun ExhibitBottomSheet(
-    exhibits: List<Exhibit>,
-    onDismiss: () -> Unit,
-    onExhibitSelected: (Long) -> Unit,
-    onCreateExhibit: (String) -> Unit,
-) {
-    val sheetState = rememberModalBottomSheetState()
-    var newExhibitName by remember { mutableStateOf("") }
-
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = sheetState,
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 32.dp),
-        ) {
-            Text(
-                text = "Add to exhibit",
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-            )
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                OutlinedTextField(
-                    value = newExhibitName,
-                    onValueChange = { newExhibitName = it },
-                    placeholder = { Text("New exhibit name") },
-                    singleLine = true,
-                    modifier = Modifier.weight(1f),
-                )
-                Spacer(Modifier.width(8.dp))
-                TextButton(
-                    onClick = {
-                        if (newExhibitName.isNotBlank()) {
-                            onCreateExhibit(newExhibitName.trim())
-                            newExhibitName = ""
-                        }
-                    },
-                    enabled = newExhibitName.isNotBlank(),
-                ) {
-                    Text("Create")
-                }
-            }
-
-            if (exhibits.isNotEmpty()) {
-                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-            }
-
-            exhibits.forEach { exhibit ->
-                ListItem(
-                    headlineContent = { Text(exhibit.name) },
-                    supportingContent = {
-                        Text("${exhibit.artworkCount} artwork${if (exhibit.artworkCount != 1) "s" else ""}")
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { onExhibitSelected(exhibit.id) },
-                    tonalElevation = 0.dp,
                 )
             }
         }

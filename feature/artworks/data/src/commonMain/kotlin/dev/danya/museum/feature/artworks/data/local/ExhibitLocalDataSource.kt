@@ -3,6 +3,7 @@ package dev.danya.museum.feature.artworks.data.local
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import dev.danya.museum.core.common.dispatchers.AppDispatchers
+import dev.danya.museum.core.database.Artwork as ArtworkEntity
 import dev.danya.museum.core.database.MuseumDatabase
 import dev.danya.museum.feature.artworks.domain.entity.Exhibit
 import kotlinx.coroutines.flow.Flow
@@ -30,10 +31,29 @@ class ExhibitLocalDataSource(
                 }
             }
 
+    fun getExhibitPreviewArtworks(exhibitId: Long, limit: Int): List<ArtworkEntity> =
+        db.exhibitArtworkQueries
+            .selectArtworksForExhibitLimited(exhibitId, limit.toLong())
+            .executeAsList()
+
+    fun getArtworksForExhibit(exhibitId: Long): Flow<List<ArtworkEntity>> =
+        db.exhibitArtworkQueries
+            .selectArtworksForExhibit(exhibitId)
+            .asFlow()
+            .mapToList(dispatchers.io)
+
     fun createExhibit(name: String, createdAt: Long): Exhibit {
         db.exhibitQueries.insert(name = name, createdAt = createdAt)
         val id = db.exhibitQueries.lastInsertRowId().executeAsOne()
         return Exhibit(id = id, name = name, createdAt = createdAt, artworkCount = 0)
+    }
+
+    fun deleteExhibit(id: Long) {
+        db.exhibitQueries.deleteById(id)
+    }
+
+    fun renameExhibit(id: Long, name: String) {
+        db.exhibitQueries.rename(name = name, id = id)
     }
 
     fun addArtwork(exhibitId: Long, artworkId: Int, addedAt: Long) {

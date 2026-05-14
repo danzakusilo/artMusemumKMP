@@ -23,9 +23,12 @@ fun ArtworkCard(
     artistName: String?,
     objectDate: String?,
     modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null,
 ) {
     Card(
         modifier = modifier,
+        onClick = onClick ?: {},
+        enabled = onClick != null,
     ) {
         Column {
             if (imageUrl != null) {

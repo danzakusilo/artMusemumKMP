@@ -12,6 +12,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Button
@@ -27,6 +28,9 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -35,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import dev.danya.museum.core.ui.theme.extendedColors
 import dev.danya.museum.feature.artworks.domain.entity.Artwork
+import dev.danya.museum.feature.artworks.ui.component.ExhibitBottomSheet
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
@@ -45,6 +50,7 @@ fun ArtworkDetailScreen(
     viewModel: ArtworkDetailViewModel = koinViewModel(parameters = { parametersOf(artworkId) }),
 ) {
     val state by viewModel.state.collectAsState()
+    var showExhibitSheet by remember { mutableStateOf(false) }
 
     when (val state = state) {
         is ArtworkDetailState.Loading -> {
@@ -67,7 +73,23 @@ fun ArtworkDetailScreen(
                 isFavorite = state.isFavorite,
                 onBack = onBack,
                 onToggleFavorite = viewModel::onToggleFavorite,
+                onAddToExhibit = { showExhibitSheet = true },
             )
+
+            if (showExhibitSheet) {
+                ExhibitBottomSheet(
+                    exhibits = state.exhibits,
+                    onDismiss = { showExhibitSheet = false },
+                    onExhibitSelected = { exhibitId ->
+                        viewModel.onAddToExhibit(exhibitId)
+                        showExhibitSheet = false
+                    },
+                    onCreateExhibit = { name ->
+                        viewModel.onCreateExhibit(name)
+                        showExhibitSheet = false
+                    },
+                )
+            }
         }
     }
 }
@@ -79,6 +101,7 @@ private fun DetailContent(
     isFavorite: Boolean,
     onBack: () -> Unit,
     onToggleFavorite: () -> Unit,
+    onAddToExhibit: () -> Unit,
 ) {
     val favoriteColor = MaterialTheme.extendedColors.favorite
 
@@ -97,6 +120,15 @@ private fun DetailContent(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(onClick = onAddToExhibit) {
+                        Icon(
+                            imageVector = Icons.Filled.Add,
+                            contentDescription = "Add to exhibit",
+                            tint = MaterialTheme.extendedColors.exhibit,
                         )
                     }
                 },

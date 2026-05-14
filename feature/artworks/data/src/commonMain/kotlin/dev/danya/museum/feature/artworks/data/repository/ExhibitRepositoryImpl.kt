@@ -3,7 +3,10 @@ package dev.danya.museum.feature.artworks.data.repository
 import dev.danya.museum.core.common.result.AppError
 import dev.danya.museum.core.common.result.Result
 import dev.danya.museum.feature.artworks.data.local.ExhibitLocalDataSource
+import dev.danya.museum.feature.artworks.data.mapper.toSummary
+import dev.danya.museum.feature.artworks.domain.entity.ArtworkSummary
 import dev.danya.museum.feature.artworks.domain.entity.Exhibit
+import dev.danya.museum.feature.artworks.domain.entity.ExhibitWithPreviews
 import dev.danya.museum.feature.artworks.domain.repository.ExhibitRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -16,9 +19,35 @@ class ExhibitRepositoryImpl(
     override fun getExhibits(): Flow<Result<List<Exhibit>>> =
         local.getExhibits().map { Result.Success(it) }
 
+    override fun getExhibitsWithPreviews(previewLimit: Int): Flow<Result<List<ExhibitWithPreviews>>> =
+        local.getExhibits().map { exhibits ->
+            val result = exhibits.map { exhibit ->
+                val previews = local.getExhibitPreviewArtworks(exhibit.id, previewLimit)
+                    .map { it.toSummary() }
+                ExhibitWithPreviews(exhibit = exhibit, previewArtworks = previews)
+            }
+            Result.Success(result)
+        }
+
+    override fun getExhibitArtworks(exhibitId: Long): Flow<Result<List<ArtworkSummary>>> =
+        local.getArtworksForExhibit(exhibitId).map { artworks ->
+            val summaries = artworks.map { it.toSummary() }
+            Result.Success(summaries)
+        }
+
     override suspend fun createExhibit(name: String): Result<Exhibit> =
         runCatching {
             local.createExhibit(name, Clock.System.now().toEpochMilliseconds())
+        }.toResult()
+
+    override suspend fun deleteExhibit(id: Long): Result<Unit> =
+        runCatching {
+            local.deleteExhibit(id)
+        }.toResult()
+
+    override suspend fun renameExhibit(id: Long, name: String): Result<Unit> =
+        runCatching {
+            local.renameExhibit(id, name)
         }.toResult()
 
     override suspend fun addArtworkToExhibit(exhibitId: Long, artworkId: Int): Result<Unit> =
