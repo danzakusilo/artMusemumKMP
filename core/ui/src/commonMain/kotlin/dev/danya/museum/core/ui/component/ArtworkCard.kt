@@ -52,7 +52,7 @@ fun ArtworkCard(
                 Text(
                     text = title,
                     style = MaterialTheme.typography.bodyMedium,
-                    maxLines = 2,
+                    maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
                 if (artistName != null) {
