@@ -1,5 +1,10 @@
 package dev.danya.museum.core.database.profiling
 
+import kotlin.concurrent.atomics.AtomicBoolean
+import kotlin.concurrent.atomics.AtomicLong
+import kotlin.concurrent.atomics.AtomicReference
+import kotlin.concurrent.atomics.ExperimentalAtomicApi
+
 data class DbCallRecord(
     val sql: String,
     val durationMs: Long,
@@ -20,28 +25,27 @@ data class DbCallRecord(
         }
 }
 
+@OptIn(ExperimentalAtomicApi::class)
 object DatabaseProfiler {
-    private val lock = Any()
-    private val _records = mutableListOf<DbCallRecord>()
-    val records: List<DbCallRecord> get() = synchronized(lock) { _records.toList() }
+    private val _records = AtomicReference<List<DbCallRecord>>(emptyList())
 
-    @Volatile
-    var enabled: Boolean = false
+    val enabled = AtomicBoolean(false)
+    val slowThresholdMs = AtomicLong(30)
+    val onRecord = AtomicReference<((DbCallRecord) -> Unit)?>(null)
 
-    @Volatile
-    var slowThresholdMs: Long = 30
-
-    @Volatile
-    var onRecord: ((DbCallRecord) -> Unit)? = null
+    val records: List<DbCallRecord> get() = _records.load()
 
     fun record(entry: DbCallRecord) {
-        if (!enabled) return
-        synchronized(lock) { _records.add(entry) }
-        onRecord?.invoke(entry)
+        if (!enabled.load()) return
+        do {
+            val current = _records.load()
+            val updated = current + entry
+        } while (!_records.compareAndSet(current, updated))
+        onRecord.load()?.invoke(entry)
     }
 
     fun clear() {
-        synchronized(lock) { _records.clear() }
+        _records.store(emptyList())
     }
 
     fun printSummary() {
@@ -50,10 +54,11 @@ object DatabaseProfiler {
             println("[DB] No database calls recorded.")
             return
         }
+        val threshold = slowThresholdMs.load()
         val total = snapshot.sumOf { it.durationMs }
         val avg = total / snapshot.size
         val max = snapshot.maxOf { it.durationMs }
-        val slow = snapshot.count { it.durationMs >= slowThresholdMs }
+        val slow = snapshot.count { it.durationMs >= threshold }
 
         println(buildString {
             val w = 62
@@ -72,7 +77,7 @@ object DatabaseProfiler {
                 }
             }
             appendLine("[DB] ├$bar┤")
-            appendLine("[DB] │ Total: ${total}ms │ Avg: ${avg}ms │ Max: ${max}ms │ Slow(>${slowThresholdMs}ms): $slow".padEnd(w + 5) + "│")
+            appendLine("[DB] │ Total: ${total}ms │ Avg: ${avg}ms │ Max: ${max}ms │ Slow(>${threshold}ms): $slow".padEnd(w + 5) + "│")
             append("[DB] └$bar┘")
         })
     }

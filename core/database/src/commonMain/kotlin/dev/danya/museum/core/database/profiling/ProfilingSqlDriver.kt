@@ -4,8 +4,10 @@ import app.cash.sqldelight.db.QueryResult
 import app.cash.sqldelight.db.SqlCursor
 import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.db.SqlPreparedStatement
+import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.time.TimeSource
 
+@OptIn(ExperimentalAtomicApi::class)
 class ProfilingSqlDriver(private val delegate: SqlDriver) : SqlDriver by delegate {
 
     override fun execute(
@@ -14,7 +16,7 @@ class ProfilingSqlDriver(private val delegate: SqlDriver) : SqlDriver by delegat
         parameters: Int,
         binders: (SqlPreparedStatement.() -> Unit)?,
     ): QueryResult<Long> {
-        if (!DatabaseProfiler.enabled) return delegate.execute(identifier, sql, parameters, binders)
+        if (!DatabaseProfiler.enabled.load()) return delegate.execute(identifier, sql, parameters, binders)
         val start = TimeSource.Monotonic.markNow()
         val result = delegate.execute(identifier, sql, parameters, binders)
         val duration = start.elapsedNow().inWholeMilliseconds
@@ -35,7 +37,7 @@ class ProfilingSqlDriver(private val delegate: SqlDriver) : SqlDriver by delegat
         parameters: Int,
         binders: (SqlPreparedStatement.() -> Unit)?,
     ): QueryResult<R> {
-        if (!DatabaseProfiler.enabled) return delegate.executeQuery(identifier, sql, mapper, parameters, binders)
+        if (!DatabaseProfiler.enabled.load()) return delegate.executeQuery(identifier, sql, mapper, parameters, binders)
         val start = TimeSource.Monotonic.markNow()
         val result = delegate.executeQuery(identifier, sql, mapper, parameters, binders)
         val duration = start.elapsedNow().inWholeMilliseconds
