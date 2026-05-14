@@ -1,5 +1,6 @@
 package dev.danya.museum.feature.search.ui
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -232,8 +233,7 @@ private fun ResultsList(
                 imageUrl = artwork.primaryImageUrl,
                 artistName = artwork.artistName,
                 objectDate = artwork.objectDate,
-                modifier = Modifier.fillMaxWidth(),
-                onClick = { onNavigateToDetail(artwork.id) },
+                modifier = Modifier.fillMaxWidth().clickable { onNavigateToDetail(artwork.id) },
             )
         }
     }

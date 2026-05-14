@@ -23,10 +23,8 @@ fun ArtworkCard(
     artistName: String?,
     objectDate: String?,
     modifier: Modifier = Modifier,
-    onClick: () -> Unit = {},
 ) {
     Card(
-        onClick = onClick,
         modifier = modifier,
     ) {
         Column {

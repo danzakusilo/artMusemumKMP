@@ -1,6 +1,7 @@
 package dev.danya.museum.feature.artworks.ui.feed
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -31,8 +32,9 @@ fun FeedPage(
     artwork: Artwork,
     isFavorite: Boolean,
     onToggleFavorite: () -> Unit,
+    onClick: () -> Unit = {},
 ) {
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier.fillMaxSize().clickable(onClick = onClick)) {
         AsyncImage(
             model = artwork.primaryImageUrl,
             contentDescription = artwork.title,

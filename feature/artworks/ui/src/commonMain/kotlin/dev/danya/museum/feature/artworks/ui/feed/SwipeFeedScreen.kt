@@ -22,7 +22,10 @@ import dev.danya.museum.feature.artworks.domain.entity.Artwork
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
-fun SwipeFeedScreen(viewModel: SwipeFeedViewModel = koinViewModel()) {
+fun SwipeFeedScreen(
+    onNavigateToDetail: (Int) -> Unit,
+    viewModel: SwipeFeedViewModel = koinViewModel(),
+) {
     val state by viewModel.state.collectAsState()
 
     when (val s = state) {
@@ -46,6 +49,7 @@ fun SwipeFeedScreen(viewModel: SwipeFeedViewModel = koinViewModel()) {
                 favorites = s.favorites,
                 onPageSettled = viewModel::onPageSettled,
                 onToggleFavorite = viewModel::onToggleFavorite,
+                onNavigateToDetail = onNavigateToDetail,
             )
         }
     }
@@ -57,6 +61,7 @@ private fun FeedPager(
     favorites: Set<Int>,
     onPageSettled: (Int) -> Unit,
     onToggleFavorite: (Int) -> Unit,
+    onNavigateToDetail: (Int) -> Unit,
 ) {
     val pagerState = rememberPagerState { artworks.size }
 
@@ -73,6 +78,7 @@ private fun FeedPager(
             artwork = artwork,
             isFavorite = artwork.id in favorites,
             onToggleFavorite = { onToggleFavorite(artwork.id) },
+            onClick = { onNavigateToDetail(artwork.id) },
         )
     }
 }
