@@ -26,10 +26,6 @@ class SearchViewModel(
         _state.update { it.copy(selectedDepartment = department) }
     }
 
-    fun onArtistOrCultureToggled() {
-        _state.update { it.copy(artistOrCulture = !it.artistOrCulture) }
-    }
-
     fun onSearch() {
         val current = _state.value
         if (current.query.isBlank()) return
@@ -38,7 +34,6 @@ class SearchViewModel(
             val result = searchArtworks(
                 query = current.query,
                 departmentId = current.selectedDepartment?.id,
-                artistOrCulture = current.artistOrCulture,
             )
             _state.update {
                 it.copy(

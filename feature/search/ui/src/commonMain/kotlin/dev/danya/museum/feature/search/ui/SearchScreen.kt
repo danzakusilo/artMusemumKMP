@@ -4,14 +4,13 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -29,6 +28,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -63,11 +63,9 @@ fun SearchScreen(
             onSearch = viewModel::onSearch,
         )
         Spacer(Modifier.height(8.dp))
-        FilterChipsRow(
-            selectedDepartment = state.selectedDepartment,
-            artistOrCulture = state.artistOrCulture,
-            onDepartmentSelected = viewModel::onDepartmentSelected,
-            onArtistOrCultureToggled = viewModel::onArtistOrCultureToggled,
+        DepartmentChip(
+            selected = state.selectedDepartment,
+            onSelected = viewModel::onDepartmentSelected,
         )
         Spacer(Modifier.height(8.dp))
         ResultsContent(
@@ -104,29 +102,6 @@ private fun SearchBar(
     )
 }
 
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-private fun FilterChipsRow(
-    selectedDepartment: Department?,
-    artistOrCulture: Boolean,
-    onDepartmentSelected: (Department?) -> Unit,
-    onArtistOrCultureToggled: () -> Unit,
-) {
-    FlowRow(
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        DepartmentChip(
-            selected = selectedDepartment,
-            onSelected = onDepartmentSelected,
-        )
-        FilterChip(
-            selected = artistOrCulture,
-            onClick = onArtistOrCultureToggled,
-            label = { Text("Artist / Culture") },
-        )
-    }
-}
-
 @Composable
 private fun DepartmentChip(
     selected: Department?,
@@ -139,6 +114,13 @@ private fun DepartmentChip(
             selected = selected != null,
             onClick = {
                 if (selected != null) onSelected(null) else expanded = true
+            },
+            leadingIcon = {
+                Icon(
+                    Icons.Default.ArrowDropDown,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                )
             },
             label = { Text(selected?.name?.replace('_', ' ')?.lowercase()
                 ?.replaceFirstChar { it.uppercase() } ?: "Department") },

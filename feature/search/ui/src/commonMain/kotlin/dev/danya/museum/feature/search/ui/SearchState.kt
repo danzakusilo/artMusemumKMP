@@ -6,7 +6,6 @@ import dev.danya.museum.feature.artworks.domain.entity.Department
 data class SearchState(
     val query: String = "",
     val selectedDepartment: Department? = null,
-    val artistOrCulture: Boolean = false,
     val resultState: ResultState = ResultState.Idle,
 )
 
