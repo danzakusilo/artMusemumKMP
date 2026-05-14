@@ -1,5 +1,6 @@
 package dev.danya.museum.core.network
 
+import dev.danya.museum.core.network.profiling.NetworkProfilingPlugin
 import io.ktor.client.*
 import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
@@ -17,4 +18,5 @@ fun createHttpClient(): HttpClient = HttpClient {
     install(Logging) {
         level = LogLevel.INFO
     }
+    install(NetworkProfilingPlugin)
 }
