@@ -15,6 +15,17 @@ fun createHttpClient(): HttpClient = HttpClient {
             isLenient = true
         })
     }
+    install(HttpTimeout) {
+        connectTimeoutMillis = 10_000
+        requestTimeoutMillis = 30_000
+        socketTimeoutMillis = 15_000
+    }
+    install(HttpRequestRetry) {
+        maxRetries = 2
+        retryOnServerErrors()
+        retryOnException(retryOnTimeout = true)
+        exponentialDelay()
+    }
     install(Logging) {
         level = LogLevel.INFO
     }
