@@ -14,6 +14,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -27,11 +30,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import demo.feature.homescreen.ui.generated.resources.Res
 import demo.feature.homescreen.ui.generated.resources.promo_discover
-import demo.feature.homescreen.ui.generated.resources.promo_gallery
 import demo.feature.homescreen.ui.generated.resources.promo_heart
-import demo.feature.homescreen.ui.generated.resources.promo_search
 import dev.danya.museum.core.ui.theme.extendedColors
-import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 
 @Composable
@@ -62,27 +62,47 @@ fun HomeScreen(
             subtitle = "Your saved masterpieces",
             containerColor = extended.favoriteContainer,
             contentColor = extended.onFavoriteContainer,
-            illustration = Res.drawable.promo_heart,
             onClick = onNavigateToFavorites,
-        )
+        ) { color ->
+            Image(
+                painter = painterResource(Res.drawable.promo_heart),
+                contentDescription = null,
+                modifier = Modifier.size(120.dp),
+                contentScale = ContentScale.Fit,
+                colorFilter = ColorFilter.tint(color, BlendMode.SrcIn),
+            )
+        }
 
         PromoCard(
             title = "Discover",
             subtitle = "Swipe through art",
             containerColor = colors.secondaryContainer,
             contentColor = colors.onSecondaryContainer,
-            illustration = Res.drawable.promo_discover,
             onClick = onNavigateToFeed,
-        )
+        ) { color ->
+            Image(
+                painter = painterResource(Res.drawable.promo_discover),
+                contentDescription = null,
+                modifier = Modifier.size(120.dp),
+                contentScale = ContentScale.Fit,
+                colorFilter = ColorFilter.tint(color, BlendMode.SrcIn),
+            )
+        }
 
         PromoCard(
             title = "Search",
             subtitle = "Find any artwork",
             containerColor = colors.tertiaryContainer,
             contentColor = colors.onTertiaryContainer,
-            illustration = Res.drawable.promo_search,
             onClick = onNavigateToSearch,
-        )
+        ) { color ->
+            Icon(
+                imageVector = Icons.Default.Search,
+                contentDescription = null,
+                modifier = Modifier.size(120.dp),
+                tint = color,
+            )
+        }
     }
 }
 
@@ -92,8 +112,8 @@ private fun PromoCard(
     subtitle: String,
     containerColor: Color,
     contentColor: Color,
-    illustration: DrawableResource,
     onClick: () -> Unit,
+    illustration: @Composable (Color) -> Unit,
 ) {
     Surface(
         modifier = Modifier
@@ -123,16 +143,7 @@ private fun PromoCard(
                     color = contentColor.copy(alpha = 0.7f),
                 )
             }
-            Image(
-                painter = painterResource(illustration),
-                contentDescription = null,
-                modifier = Modifier.size(120.dp),
-                contentScale = ContentScale.Fit,
-                colorFilter = ColorFilter.tint(
-                    color = contentColor.copy(alpha = 0.35f),
-                    blendMode = BlendMode.SrcIn,
-                ),
-            )
+            illustration(contentColor.copy(alpha = 0.35f))
         }
     }
 }
