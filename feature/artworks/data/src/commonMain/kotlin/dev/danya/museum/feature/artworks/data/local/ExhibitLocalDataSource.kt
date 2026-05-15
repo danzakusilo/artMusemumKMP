@@ -54,11 +54,15 @@ class ExhibitLocalDataSource(
     }
 
     fun addArtwork(exhibitId: Long, artworkId: Int, addedAt: Long) {
-        db.exhibitArtworkQueries.add(
-            exhibitId = exhibitId,
-            artworkId = artworkId.toLong(),
-            addedAt = addedAt,
-        )
+        db.transaction {
+            db.exhibitArtworkQueries.shiftSortOrderDown(exhibitId)
+            db.exhibitArtworkQueries.add(
+                exhibitId = exhibitId,
+                artworkId = artworkId.toLong(),
+                addedAt = addedAt,
+                sortOrder = 0,
+            )
+        }
     }
 
     fun removeArtwork(exhibitId: Long, artworkId: Int) {
@@ -70,6 +74,18 @@ class ExhibitLocalDataSource(
 
     fun removeAllForArtwork(artworkId: Int) {
         db.exhibitArtworkQueries.removeAllForArtwork(artworkId.toLong())
+    }
+
+    fun reorderArtworks(exhibitId: Long, orderedArtworkIds: List<Int>) {
+        db.transaction {
+            orderedArtworkIds.forEachIndexed { index, artworkId ->
+                db.exhibitArtworkQueries.updateSortOrder(
+                    sortOrder = index.toLong(),
+                    exhibitId = exhibitId,
+                    artworkId = artworkId.toLong(),
+                )
+            }
+        }
     }
 
     fun getExhibitIdsForArtwork(artworkId: Int): Flow<Set<Long>> =

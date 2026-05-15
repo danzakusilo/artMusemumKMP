@@ -60,6 +60,14 @@ class ExhibitRepositoryImpl(
             local.removeArtwork(exhibitId, artworkId)
         }.toResult()
 
+    override suspend fun reorderExhibitArtworks(
+        exhibitId: Long,
+        orderedArtworkIds: List<Int>,
+    ): Result<Unit> =
+        runCatching {
+            local.reorderArtworks(exhibitId, orderedArtworkIds)
+        }.toResult()
+
     override fun getExhibitIdsForArtwork(artworkId: Int): Flow<Result<Set<Long>>> =
         local.getExhibitIdsForArtwork(artworkId).map { Result.Success(it) }
 

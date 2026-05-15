@@ -11,8 +11,9 @@ import dev.danya.museum.feature.artworks.domain.usecase.GetExhibitsUseCase
 import dev.danya.museum.feature.artworks.domain.usecase.GetExhibitsWithPreviewsUseCase
 import dev.danya.museum.feature.artworks.domain.usecase.GetFavoritesUseCase
 import dev.danya.museum.feature.artworks.domain.usecase.IsFavoriteUseCase
-import dev.danya.museum.feature.artworks.domain.usecase.RenameExhibitUseCase
 import dev.danya.museum.feature.artworks.domain.usecase.RemoveArtworkFromExhibitUseCase
+import dev.danya.museum.feature.artworks.domain.usecase.RenameExhibitUseCase
+import dev.danya.museum.feature.artworks.domain.usecase.ReorderExhibitArtworksUseCase
 import dev.danya.museum.feature.artworks.domain.usecase.ToggleFavoriteUseCase
 import dev.danya.museum.feature.artworks.ui.detail.ArtworkDetailViewModel
 import dev.danya.museum.feature.artworks.ui.exhibitions.ExhibitDetailViewModel
@@ -36,9 +37,10 @@ val artworksPresentationModule = module {
     factory { IsFavoriteUseCase(get()) }
     factory { RenameExhibitUseCase(get()) }
     factory { RemoveArtworkFromExhibitUseCase(get()) }
+    factory { ReorderExhibitArtworksUseCase(get()) }
     factory { ToggleFavoriteUseCase(get()) }
     viewModel { params -> ArtworkDetailViewModel(params.get(), get(), get(), get(), get(), get(), get(), get(), get()) }
-    viewModel { params -> ExhibitDetailViewModel(params.get(), get(), get()) }
+    viewModel { params -> ExhibitDetailViewModel(params.get(), get(), get(), get()) }
     viewModel { ExhibitionsViewModel(get(), get(), get(), get()) }
     viewModel { FavoritesViewModel(get(), get(), get(), get(), get()) }
     viewModel { SwipeFeedViewModel(get(), get()) }

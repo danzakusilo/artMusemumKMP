@@ -2,14 +2,15 @@ CREATE TABLE ExhibitArtwork (
     exhibitId INTEGER NOT NULL REFERENCES Exhibit(id) ON DELETE CASCADE,
     artworkId INTEGER NOT NULL REFERENCES Artwork(id) ON DELETE CASCADE,
     addedAt INTEGER NOT NULL,
+    sortOrder INTEGER NOT NULL DEFAULT 0,
     PRIMARY KEY (exhibitId, artworkId)
 );
 
 CREATE INDEX ExhibitArtwork_artworkId ON ExhibitArtwork(artworkId);
 
 add:
-INSERT OR IGNORE INTO ExhibitArtwork(exhibitId, artworkId, addedAt)
-VALUES (?, ?, ?);
+INSERT OR IGNORE INTO ExhibitArtwork(exhibitId, artworkId, addedAt, sortOrder)
+VALUES (?, ?, ?, ?);
 
 remove:
 DELETE FROM ExhibitArtwork
@@ -20,7 +21,7 @@ SELECT a.*
 FROM Artwork a
 INNER JOIN ExhibitArtwork ea ON ea.artworkId = a.id
 WHERE ea.exhibitId = ?
-ORDER BY ea.addedAt DESC;
+ORDER BY ea.sortOrder ASC;
 
 countForExhibit:
 SELECT COUNT(*)
@@ -38,7 +39,7 @@ SELECT a.*
 FROM Artwork a
 INNER JOIN ExhibitArtwork ea ON ea.artworkId = a.id
 WHERE ea.exhibitId = ?
-ORDER BY ea.addedAt DESC
+ORDER BY ea.sortOrder ASC
 LIMIT ?;
 
 exhibitsContainingArtwork:
@@ -51,3 +52,13 @@ ORDER BY ea.addedAt DESC;
 removeAllForArtwork:
 DELETE FROM ExhibitArtwork
 WHERE artworkId = ?;
+
+updateSortOrder:
+UPDATE ExhibitArtwork
+SET sortOrder = ?
+WHERE exhibitId = ? AND artworkId = ?;
+
+shiftSortOrderDown:
+UPDATE ExhibitArtwork
+SET sortOrder = sortOrder + 1
+WHERE exhibitId = ?;
